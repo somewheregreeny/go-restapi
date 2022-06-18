@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sort"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -33,7 +34,8 @@ var lastId int
 
 func MakeWebHandler() http.Handler{
 	mux := mux.NewRouter()
-	mux.HandleFunc("/students", GetStudentListHandler).Methods("GET")
+	mux.HandleFunc("/students/", GetStudentListHandler).Methods("GET")
+	mux.HandleFunc("/students/{id:[0-9]+}", GetStudentHandler).Methods("GET")
 
 	students = make(map[int]Student)
 	students[1] = Student{1, "aaa", 16, 87}
@@ -54,6 +56,20 @@ func GetStudentListHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(list)
 
+}
+
+func GetStudentHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+	student, ok := students[id]
+
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(student)
 }
 
 func main() {
